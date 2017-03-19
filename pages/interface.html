@@ -1,38 +1,38 @@
 <!DOCTYPE HTML>
- <html>
-   <head>
+<html>
+
+<head>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
 
-        <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
-	<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
-	<script src="http://trainmate16.azurewebsites.net:80/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <script src="http://trainmate16.azurewebsites.net:80/socket.io/socket.io.js"></script>
     <script>
+    function initSocketIO() {
+        iosocket = io.connect();
+alert('ss');
+        iosocket.on('onconnection', function(value) {
+alert('ss');
+            iosocket.on('updates', function(receivedData) {
+                $('#sliderTxt').html(receivedData);
 
-	function initSocketIO()
-	{
-		iosocket = io.connect();
+            });
+        });
+    }
 
-		iosocket.on('onconnection', function(value) {
-
-		iosocket.on('updates', function (receivedData) {
-		$('#sliderTxt').html(receivedData);
-
-		});
-  });
-	}
-
-	window.onload = function() {
-	     initSocketIO();
-        };
-
+    window.onload = function() {
+        initSocketIO();
+    };
     </script>
-  </head>
-  <body>
-  <center>
-	<h1>TrainMate Location Tracker</h1>
-<br>
+</head>
 
-	<h2 id="sliderTxt">Locaction???</h2>
-</center>
-  </body>
+<body>
+    <center>
+        <h1>TrainMate Location Tracker</h1>
+        <br>
+
+        <h2 id="sliderTxt">Locatiocn???</h2>
+    </center>
+</body>
+
 </html>

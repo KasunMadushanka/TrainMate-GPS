@@ -1,85 +1,78 @@
-var fs = require('fs')
-,http = require('http'),
-socketio = require('socket.io'),
-url = require("url");
-//SerialPort = require("serialport")
+var express = require('express');
+var bodyParser = require('body-parser');
+var connection = require('./database').db_connection;
+var app = express();
+var sql = require('mssql');
 
-var socketServer;
-var serialPort;
-var portName = 'COM5'; //change this to your Arduino port
-var sendData = "";
+// Create application/x-www-form-urlencoded parser
+var urlencodedParser = bodyParser.urlencoded({ extended: false })
 
-// handle contains locations to browse to (vote and poll); pathnames.
-function startServer(route,handle,debug)
-{
-	// on request event
-	function onRequest(request, response) {
-	  // parse the requested url into pathname. pathname will be compared
-	  // in route.js to handle (var content), if it matches the a page will
-	  // come up. Otherwise a 404 will be given.
-	  var pathname = url.parse(request.url).pathname;
-	  console.log("Request for " + pathname + " received");
-	  var content = route(handle,pathname,response,request,debug);
-	}
+app.use(bodyParser.json());
 
-	var httpServer = http.createServer(onRequest).listen(process.env.PORT ||80, function(){
-		console.log("Listening at: http://localhost:80");
-		console.log("Server is up");
-	});
-	//serialListener(debug);
-	initSocketIO(httpServer,debug);
-}
+app.use(function (req, res, next) {
 
-function initSocketIO(httpServer,debug)
-{
-	socketServer = socketio.listen(httpServer);
-	if(debug == false){
-		socketServer.set('log level', 1); // socket IO debug off
-	}
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8100');
 
-	//socketServer.set('transports', ['xhr-polling','websocket']);
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
-	socketServer.on('connection', function (socket) {
-	//console.log('connected');
-	socket.emit('onconnection', {pollOneValue:sendData});
-	socketServer.on('update', function(data) {
-	socket.emit('updateData',{pollOneValue:data});
-	});
-	socket.on('message', function(data) {
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
 
-		socketServer.emit('updates',data);
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
 
-	});
+    // Pass to next layer of middleware
+    next();
+});
 
-    });
-}
+app.post('/server.js', urlencodedParser, function(req, res) {
 
-// Listen to serial port
-/*function serialListener(debug)
-{
-    var receivedData = "";
-    serialPort = new SerialPort(portName, {
-        baudrate: 9600,
-        // defaults for Arduino serial communication
-         dataBits: 8,
-         parity: 'none',
-         stopBits: 1,
-         flowControl: false
+    var email= req.body.email;
+    var password= req.body.password;
+
+    sql.connect(connection).then(function() {
+        console.log('opening connection');
+        new sql.Request().query("Select * from customers WHERE NAME='"+email+"'").then(function(recordset) {
+            console.dir(recordset);
+          if(recordset.length>0){
+              res.send(recordset);
+
+          }else{
+
+          }
+        }).catch(function(error) {
+
+        });
     });
 
-    serialPort.on("open", function () {
-      console.log('open serial communication');
-            // Listens to incoming data
-        serialPort.on('data', function(data) {
-             receivedData += data.toString();
-          if (receivedData .indexOf('E') >= 0 && receivedData .indexOf('B') >= 0) {
-           sendData = receivedData .substring(receivedData .indexOf('B') + 1, receivedData .indexOf('E'));
-           receivedData = '';
-         }
-         // send the incoming data to browser with websockets.
-       socketServer.emit('update', sendData);
-      });
-    });*/
+})
 
 
-exports.start = startServer;
+
+/*app.listen(process.env.PORT||80, function() {
+    console.log('Example app listening on port 3000!')
+})*/
+
+
+/*var config = {
+
+    user: 'kasun@trainmate',
+    password: 'Trainmate123',
+    server: 'trainmate.database.windows.net',
+    database: 'trainmate',
+    options: {
+        encrypt: true
+    }
+}
+
+sql.connect(config).then(function() {
+    console.log('opening connection');
+    new sql.Request().query('Select * from customers').then(function(recordset) {
+        console.dir(recordsent);
+    }).catch(function(error) {
+
+    });
+});*/
